@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#fb8c00">
+
+<meta charset="UTF-8">
+<title>Chatbot com 5 Perguntas por Voz</title>
+
+<!-- BOOTSTRAP -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="thame-color" content="#000000">
+
+<style>
+    body {
+        background: #fff3e0; /* Laranja claro */
+        font: 16px Arial, sans-serif;
+        color: #333;
+    }
+
+    .chatbox {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-width: 430px;
+        margin: 40px auto;
+        text-align: center;
+        border: 2px solid #ffa726;
+    }
+
+    #btn-vozar {
+        background: #fb8c00;
+        border: none;
+        color: white;
+        font-size: 18px;
+        border-radius: 10px;
+        padding: 12px;
+        width: 100%;
+    }
+
+    #btn-vozar:hover {
+        background: #ef6c00;
+    }
+
+    .perguntas-box {
+        margin-top: 20px;
+        text-align: left;
+        background: #fff8e1;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #ffcc80;
+    }
+
+    .toggle-btn {
+        background: #f57c00;
+        border: none;
+        width: 100%;
+        padding: 10px;
+        color: white;
+        border-radius: 8px;
+        font-size: 16px;
+        margin-top: 15px;
+    }
+    /* Responsividade */
+    @media (max-width: 576px) {
+        .chatbox {
+            max-width: 90% !important;
+            padding: 18px;
+        }
+
+        #btn-vozar, .toggle-btn {
+            font-size: 15px;
+            padding: 10px;
+        }
+
+        h2 {
+            font-size: 22px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="chatbox">
+    <h2 class="text-warning fw-bold">Chatbot por Voz</h2>
+    <p id="mensagem-inicial" class="mt-2"></p>
+
+    <button id="btn-vozar" onclick="ouvir()"> 🎤 Falar Agora</button>
+
+    <button class="toggle-btn" onclick="mostrarPerguntas()">📋 Ver Perguntas Disponíveis</button>
+
+    <div id="lista-perguntas" class="perguntas-box" style="display:none;"></div>
+</div>
+
+<script>
+// PERGUNTAS E RESPOSTAS
+const perguntasERespostas = {
+    "qual seu nome": "Meu nome é Max.",
+    "qual e seu nome": "Meu nome é Max.",
+    "qual o seu nome": "Meu nome é Max.",
+
+    "como voce esta": "Estou funcionando perfeitamente!",
+
+    "que horas sao": "No momento não posso dizer as horas exatas.",
+
+    "qual sua funcao": "Minha função é responder perguntas pré-programadas sobre saúde da criança e do adolescente.",
+
+    "onde voce mora": "Eu moro dentro deste sistema!",
+
+    "sobre o que voce pode me ajudar": "Posso ajudar com informações sobre saúde da criança e do adolescente.",
+
+    "o que e saude infantil": "Saúde infantil refere-se ao bem-estar físico, mental e social das crianças.",
+
+    "quanto tempo dura o periodo neonatal": "O período neonatal dura os primeiros 28 dias de vida do bebê.",
+
+    "o que e o calendario vacinacao da crianca": "É o cronograma oficial de vacinas recomendadas para proteger as crianças.",
+
+    "porque a amamentacao exclusiva ate os 6 meses e importante": "Ela fornece todos os nutrientes necessários, fortalece o sistema imunológico e cria vínculo afetivo.",
+
+    "quais sao os sinais de desidratacao em criancas": "Boca seca, poucos xixis, ausência de lágrimas, olhos fundos e cansaço.",
+
+    "quando um adolescente deve fazer exames de rotina": "Anualmente, para avaliar seu desenvolvimento e saúde geral.",
+
+    "quais sao os beneficios da atividade fisica para adolescentes": "Melhora humor, fortalece músculos, ajuda no peso e reduz estresse.",
+
+    "como prevenir doencas comuns em criancas": "Vacinação, boa alimentação, higiene e atividades físicas.",
+
+    "qual a importancia do sono para o desenvolvimento infantil": "O sono ajuda crescimento, memória, humor e imunidade.",
+
+    "quando o adolescente deve procurar um profissional de saude mental": "Se houver ansiedade, depressão, mudanças de humor ou dificuldade com o estresse.",
+
+    "quando o adolescente deve fazer o check up medico": "O check-up deve ser anual.",
+};
+
+// Normaliza texto
+function normalizar(texto) {
+    return texto
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+}
+
+// Fala
+function falar(texto) {
+    const voz = new SpeechSynthesisUtterance(texto);
+    voz.lang = "pt-BR";
+    speechSynthesis.speak(voz);
+}
+
+// Ouvir
+function ouvir() {
+
+    if (!("webkitSpeechRecognition" in window)) {
+        falar("Seu navegador não suporta reconhecimento de voz.");
+        return;
+    }
+
+    const rec = new webkitSpeechRecognition();
+    rec.lang = "pt-BR";
+    rec.start();
+
+    rec.onresult = function(event) {
+        let falado = normalizar(event.results[0][0].transcript);
+
+        let respostaFinal = "Essa pergunta não consta no sistema.";
+
+        for (let pergunta in perguntasERespostas) {
+            if (falado.includes(normalizar(pergunta))) {
+                respostaFinal = perguntasERespostas[pergunta];
+                break;
+            }
+        }
+
+        falar(respostaFinal);
+    };
+}
+
+// Lista de perguntas
+function mostrarPerguntas() {
+    const div = document.getElementById("lista-perguntas");
+
+    if (div.style.display === "none") {
+        div.style.display = "block";
+        div.innerHTML = "<strong>Perguntas disponíveis:</strong><br><br>" +
+            Object.keys(perguntasERespostas)
+                .map(p => `• ${p}`)
+                .join("<br>");
+    } else {
+        div.style.display = "none";
+    }
+}
+
+// Mensagem inicial ao carregar
+window.onload = function() {
+    falar("Olá! Meu nome é Max. Você pode me fazer uma pergunta quando quiser.");
+};
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    if("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker registrado com sucesso!"))
+        .catch(err => console.log("Erro no SW:", err));
+    }
+</script> 
+
+</body>
+</html>
